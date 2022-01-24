@@ -65,7 +65,7 @@ def generate_input_set(size):
     result = []
     i = 0
     while i < size:
-        result.append(generate_input_point())
+        result.append(generate_input_vector())
         i += 1
     answer = torch.from_numpy(np.array(result, dtype = 'float32'))
     return answer.to(device)

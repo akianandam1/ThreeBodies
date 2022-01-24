@@ -1,4 +1,8 @@
 
+# The purpose of this file is to 1) define the universal constants
+# but also 2) reformulate new constants (K_1 and K_2) for our differential
+# equations such that our mass and time and position and velocity components
+# are small (eg mass numbers are like 1.0, position numbers like 1.3 etc)
 
 # Define universal gravitation constant
 G = 6.67408e-11  # N-m2/kg2#Reference quantities

@@ -89,19 +89,21 @@ def numerical_solver(input_vector):
     output = np.append(output, r_3_solution[-1])
     return output
 
+
+
 def get_full_data(input_vector):
 
     # Gets the components
-    time = input_vector[0]
-    r_1 = input_vector[1:4]
-    r_2 = input_vector[4:7]
-    r_3 = input_vector[7:10]
-    v_1 = input_vector[10:13]
-    v_2 = input_vector[13:16]
-    v_3 = input_vector[16:19]
-    m_1 = input_vector[19]
-    m_2 = input_vector[20]
-    m_3 = input_vector[21]
+    time = 10 # Assumes time component is 10
+    r_1 = input_vector[0:3]
+    r_2 = input_vector[3:6]
+    r_3 = input_vector[6:9]
+    v_1 = input_vector[9:12]
+    v_2 = input_vector[12:15]
+    v_3 = input_vector[15:18]
+    m_1 = input_vector[18]
+    m_2 = input_vector[19]
+    m_3 = input_vector[20]
 
     # vector comprised of position and velocity
     w = np.array([[r_1,r_2,r_3], [v_1,v_2,v_3]])
@@ -109,17 +111,13 @@ def get_full_data(input_vector):
     w = w.flatten()
 
     # Time points for the numerical diff eq solver to use. Spans from 0 to t
-    # and has points that are .001 time units spaced apart
-    time_points = np.linspace(0, time, int(time/.001))
+    # and has points that are .01 time units spaced apart
+    time_points = np.linspace(0, time, int(time/.01))
 
     # input into scipy odeint must be 1 dimensional
     # Gets the solutions to the differential equations
     three_body_solution = sci.integrate.odeint(ThreeBodyDiffEq, w, time_points, args = (m_1, m_2, m_3))
 
-    # Extracts the position aspect of the solutions
-    r_1_solution = three_body_solution[:, :3]
-    r_2_solution = three_body_solution[:, 3:6]
-    r_3_solution = three_body_solution[:, 6:9]
-
-    return np.array([r_1_solution, r_2_solution, r_3_solution])
+    output = three_body_solution[:, 0:9]
+    return output.flatten()
 

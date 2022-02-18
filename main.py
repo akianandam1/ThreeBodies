@@ -1,8 +1,9 @@
 import torch
-import numpy as np
 from ThreeBodies import ThreeBodyNet
-import random
 from NumericalSolver import *
+from torch.utils.data import TensorDataset
+from torch.utils.data import DataLoader
+
 
 # Function to determine whether gpu is available or not
 def get_default_device():
@@ -16,7 +17,7 @@ def get_default_device():
 device = get_default_device()
 
 
-#Automatically puts data onto the default device
+# Automatically puts data onto the default device
 def to_device(data, device):
     """Move tensor(s) to chosen device"""
     if isinstance(data, (list,tuple)):
@@ -24,100 +25,59 @@ def to_device(data, device):
     return data.to(device, non_blocking=True)
 
 
-# Generates a random input vector of np array form [time, initial velocity, initial height]
-def generate_input_vector():
-    return np.array([
-        random.uniform(0, 5), # time
+# Loads the data
+input_set = np.load("input_data.npy")
+target_set = np.load("target_data.npy")
+input_set = torch.from_numpy(input_set).to(device)
+target_set = torch.from_numpy(target_set).to(device)
+dataset = TensorDataset(input_set, target_set)
+batch_size = 1
+data_loader = DataLoader(dataset, batch_size, shuffle=True)
 
-        random.uniform(-1, 1),
-        random.uniform(-1, 1), # particle 1's position
-        random.uniform(-1, 1),
-
-        random.uniform(-1, 1),
-        random.uniform(-1, 1), # particle 2's position
-        random.uniform(-1, 1),
-
-        random.uniform(-1, 1),
-        random.uniform(-1, 1), # particle 3's position
-        random.uniform(-1, 1),
-
-        random.uniform(-0.2, 0.2),
-        random.uniform(-0.2, 0.2), # particle 1's velocity
-        random.uniform(-0.2, 0.2),
-
-        random.uniform(-0.2, 0.2),
-        random.uniform(-0.2, 0.2), # particle 2's velocity
-        random.uniform(-0.2, 0.2),
-
-        random.uniform(-0.2, 0.2),
-        random.uniform(-0.2, 0.2), # particle 3's velocity
-        random.uniform(-0.2, 0.2),
-
-        random.uniform(0.8, 1.2),
-        random.uniform(0.8, 1.2), # masses of each particle
-        random.uniform(0.8, 1.2)
-
-    ], dtype = 'float32')
+# # Initializes and fills the input and target sets
+# input_set = np.array([data[0][0]], dtype='float32')
+# target_set = np.array([data[0][1]], dtype='float32')
+# i = 1
+# while i < len(data):
+#     input_set = np.append(input_set, np.array([data[i][0]]), axis=0)
+#     target_set = np.append(target_set, np.array([data[i][1]]), axis=0)
+#     print(i)
+#     i += 1
+#
+# print("Built inputs and outputs")
+#
+# # Puts them on correct device
 
 
 
-# Generates input set of given size. Returns torch tensor on appropriate device
-def generate_input_set(size):
-    result = np.array([generate_input_vector()], dtype = "float32")
-    i = 1
-    while i < size:
-        result = np.append(result, np.array([generate_input_vector()], dtype = "float32"), axis=0)
-        i += 1
-    answer = torch.from_numpy(result)
-
-    return answer.to(device)
-
-
-# Generates target data set based on n by 3d input set whose vectors are of form
-# [time,initial_velocity,initial_height]. Takes in torch tensor assumed to be on gpu. Converts it to cpu and
-# numpy array for operations. Then returns it back as a torch tensor on appropriate device
-def generate_target_set(input_set):
-    input_set = input_set.cpu().numpy()
-    result = np.array([numerical_solver(input_set[0])], dtype='float32')
-    i = 1
-    while i < input_set.shape[0]:
-        result = np.append(result, np.array([numerical_solver(input_set[i])], dtype = "float32"), axis=0)
-        i += 1
-    answer = torch.from_numpy(result)
-    return answer.to(device)
-
-
-
-# Model takes in 22d input vector. Spits out 9d output vector (positions).
-# Model has 1000 neurons per hidden layer. Model is moved onto appropriate device
-model = to_device(ThreeBodyNet(22, 1000, 9), device)
-
+# Model takes in 21d input vector. Spits out 9000d output vector (positions).
+# Model has 256 neurons per hidden layer. Model is moved onto appropriate device
+model = to_device(ThreeBodyNet(21, 256, 9000), device)
 
 # Defines the function that trains the model
-def fit(epochs, lr, batch_size, model, opt_func=torch.optim.SGD):
+def fit(epochs, lr, model, opt_func=torch.optim.Adam):
 
+    # Gets appropriate batch size such that we use all the data by the time we finish our epochs
     optimizer = opt_func(model.parameters(), lr)
 
     for epoch in range(epochs):
-        try:
-            # Generates the input and output training data
-            inputs = generate_input_set(batch_size)
-            targets = generate_target_set(inputs)
+        i = 1
+        for inputs, targets in data_loader:
+            print(i)
+            # # Generates the input and target training data
+            # inputs = input_set[(epoch*batch_size):((epoch+1)*batch_size)].to(torch.float32)
+            # targets = target_set[(epoch*batch_size):((epoch+1)*batch_size)].to(torch.float32)
 
             # Trains the model
             loss = model.training_step(inputs, targets)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-
-            print(f"Epoch: {epoch}")
-        except:
-            pass
+            i += 1
+        print(f"Epoch: {epoch}")
 
 
-# Run for 300,000 epochs.
-fit(10000, 1e-5, 50, model)
+fit(2, 1e-5, model)
 
 # Saves the model
-torch.save(model.state_dict(), 'Models\ThirdModel.pth')
-
+torch.save(model.state_dict(), 'Models\TestModel.pth')

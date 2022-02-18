@@ -3,35 +3,41 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import matplotlib as mpl
-from ModelSolver import get_model_data
+import torch
+from ThreeBodies import ThreeBodyNet
 
 mpl.rcParams['animation.ffmpeg_path'] = r'D:\Aki\Python37\Lib\site-packages\ffmpeg-5.0-essentials_build\bin\ffmpeg.exe'
+imported_model = ThreeBodyNet(21, 256, 9000)
+imported_model.load_state_dict(torch.load('Models\TestModel.pth'))
 
+input = np.array([-0.48944658,  0.04835057,  0.11562183,  0.84818554,  0.88853484,
+        0.794892  , -0.99460113,  0.6007243 ,  0.16061743,  0.19378561,
+        0.08345382, -0.18823653, -0.17162505,  0.10885531,  0.09457611,
+       -0.18120962, -0.02358072,  0.19219033,  0.9343363 ,  0.9927892 ,
+        1.090716 ], dtype='float32')
+sol = get_full_data(input).reshape((1000,9))
+r1_sol = sol[:, 0:3]
+r2_sol = sol[:, 3:6]
+r3_sol = sol[:, 6:9]
 
-input = np.array([10, -0.13472769, -0.5032093, 0.89470166, 0.85704565, 0.52349514,
-                  0.19522771, -0.1668427, 0.9241036, 0.5331911, 0.14088221, 0.11630405,
-                  -0.17256415, 0.06951951, 0.1763274, 0.05063986, 0.15454873, 0.09188691,
-                  0.02639361, 1.0611788, 1.0217828, 0.9619391], dtype="float32")
-r1_sol = get_full_data(input)[0]
-r2_sol = get_full_data(input)[1]
-r3_sol = get_full_data(input)[2]
+model_sol = imported_model(torch.from_numpy(input)).detach().numpy().reshape((1000,9))
+model_r1_sol = model_sol[:, 0:3]
+model_r2_sol = model_sol[:, 3:6]
+model_r3_sol = model_sol[:, 6:9]
 
-model_r1_sol = get_model_data(input)[:, 0:3]
-model_r2_sol = get_model_data(input)[:, 3:6]
-model_r3_sol = get_model_data(input)[:, 6:9]
 
 
 # Create figure
 fig = plt.figure(figsize=(20, 20))  # Create 3D axes
 ax = fig.add_subplot(111, projection="3d")  # Plot the orbits
-ax.set_zlim(-15, 15)
+ax.set_zlim(-3, 3)
 ax.set_title("Visualization of orbits of stars in a three body system\n", fontsize=28)
 
 particle1, = plt.plot([], [], [], color='r')
 particle2, = plt.plot([], [], [], color='g')
 particle3, = plt.plot([], [], [], color='b')
-plt.xlim(-15, 15)
-plt.ylim(-15, 15)
+plt.xlim(-3, 3)
+plt.ylim(-3, 3)
 
 p1, = plt.plot([], [], marker='o', color='r', label="Real first star")
 p2, = plt.plot([], [], marker='o', color='g', label="Real second star")
@@ -80,5 +86,5 @@ def update(i):
 
 
 writer = animation.FFMpegWriter(fps=60)
-ani = animation.FuncAnimation(fig, update, frames=4000, interval=25, blit=True)
-ani.save(r"D:\Aki\Pycharm\PycharmProjects\ThreeBodies\sample.mp4", writer=writer)
+ani = animation.FuncAnimation(fig, update, frames=1000, interval=25, blit=True)
+ani.save(r"D:\Aki\Pycharm\PycharmProjects\ThreeBodies\test.mp4", writer=writer)

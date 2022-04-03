@@ -94,7 +94,7 @@ def numerical_solver(input_vector):
 def get_full_data(input_vector):
 
     # Gets the components
-    time = 10 # Assumes time component is 10
+    time = 5 # Assumes time component is 10
     r_1 = input_vector[0:3]
     r_2 = input_vector[3:6]
     r_3 = input_vector[6:9]
@@ -112,7 +112,7 @@ def get_full_data(input_vector):
 
     # Time points for the numerical diff eq solver to use. Spans from 0 to t
     # and has points that are .01 time units spaced apart
-    time_points = np.linspace(0, time, int(time/.01))
+    time_points = np.linspace(0, time, int(time/.001))
 
     # input into scipy odeint must be 1 dimensional
     # Gets the solutions to the differential equations

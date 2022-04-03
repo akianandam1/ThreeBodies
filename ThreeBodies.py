@@ -6,14 +6,20 @@ class ThreeBodyNet(nn.Module):
 
     def __init__(self, in_size, hidden_size, out_size):
         super().__init__()
-        # 5 hidden layers
+        # 10 hidden layers
         self.linear1 = nn.Linear(in_size, hidden_size)
+
         self.linear2 = nn.Linear(hidden_size, hidden_size)
         self.linear3 = nn.Linear(hidden_size, hidden_size)
         self.linear4 = nn.Linear(hidden_size, hidden_size)
         self.linear5 = nn.Linear(hidden_size, hidden_size)
         self.linear6 = nn.Linear(hidden_size, hidden_size)
-        self.linear7 = nn.Linear(hidden_size, out_size)
+        self.linear7 = nn.Linear(hidden_size, hidden_size)
+        self.linear8 = nn.Linear(hidden_size, hidden_size)
+        self.linear9 = nn.Linear(hidden_size, hidden_size)
+        self.linear10 = nn.Linear(hidden_size, hidden_size)
+
+        self.linear11 = nn.Linear(hidden_size, out_size)
 
     def forward(self, input_vector):
         # Apply the layer to the input vector
@@ -31,6 +37,14 @@ class ThreeBodyNet(nn.Module):
         out = self.linear6(out)
         out = F.relu(out)
         out = self.linear7(out)
+        out = F.relu(out)
+        out = self.linear8(out)
+        out = F.relu(out)
+        out = self.linear9(out)
+        out = F.relu(out)
+        out = self.linear10(out)
+        out = F.relu(out)
+        out = self.linear11(out)
         return out
 
     def training_step(self, inputs, outputs):
